@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 import marko
 
 class md2www:
@@ -8,6 +9,9 @@ class md2www:
         self.src = src_folder
         self.www = www_folder
         self.struct = {}
+
+        if not os.path.exists(self.www):
+            os.makedirs(self.www)
 
     def get_weigth(self):
         weigth = {}
@@ -35,6 +39,7 @@ class md2www:
     def generate_structure(self):
         weigth = self.get_weigth()
         missing = False
+        self.assets = []
         for directory in os.listdir(self.src):
             if os.path.isdir(self.src+directory) and directory[0] != ".":
                 content = []
@@ -52,6 +57,10 @@ class md2www:
                         except:
                             print("Missing file {} in order.txt".format(file))
                             missing = True
+                    else:
+                        if file == "assets":
+                            for f in os.listdir(self.src+directory+"/assets"):
+                                self.assets.append(self.src + directory +"/assets/"+ f)
                 self.struct[directory] = {
                     "content": content,
                     "weigth": chapter_weigth
@@ -63,12 +72,15 @@ class md2www:
         self.order_struct()
 
     def file2name(self, file):
-        return " ".join(file.split("-")).capitalize().strip()
+        return " ".join(file.replace(".md", "").split("-")).capitalize().strip()
+
+    def file2link(self, file):
+        return file.replace("?", "").replace(".md", ".html")
 
     def generate_link(self, file):
-        name = self.file2name(file.replace(".md", " "))
+        name = self.file2name(file)
 
-        return '<a href="{}">{}</a>'.format(name+".html", name)
+        return '<a href="{}">{}</a>'.format(self.file2link(file), name)
 
     def generate_section(self, key, value):
         section = "<section><h2>"
@@ -89,18 +101,20 @@ class md2www:
         nav += "</nav>"
 
         return nav
-            
+    
     def generate_page(self, template, nav, chapter, content):
-        name = self.file2name(content.replace(".md", ""))
-        
+        name = self.file2name(content)
 
         with open(self.src + chapter + "/" + content) as f:
             parsed = marko.convert(f.read())
 
         page = template.replace("<!--title-->", "{} | {}".format(name, self.project)).replace("<!--nav-->", nav).replace("<!--content-->", parsed)
 
-        with open(self.www + content.replace(".md", ".html"), "w") as f:
+        with open(self.www + self.file2link(content), "w") as f:
             f.write(page)
+
+    def generate_index(self, template, nav):
+        pass
 
     def generate_pages(self):
         nav = self.generate_navigation()
@@ -116,6 +130,28 @@ class md2www:
             for p in value['content']:
                 self.generate_page(template, nav, key, p['name'])
 
+    def move_assets(self):
+        for asset in self.assets:
+            if os.path.isfile(asset):
+                if not os.path.exists(self.www+"assets"):
+                    os.makedirs(self.www+"assets")
+                shutil.copy(asset, self.www+"assets")
+            else:
+                print(f"File {asset} does not exist.")
+        print("Assets moved successfully.")
+
+    def move_css(self):
+        pass
+
+    def move_js(self):
+        pass
+
+    def move(self):
+        self.move_assets()
+        self.move_css()
+        self.move_js()
+
     def generate(self):
         self.generate_structure()
         self.generate_pages()
+        self.move()
