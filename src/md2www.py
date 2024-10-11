@@ -3,6 +3,7 @@ import sys
 import shutil
 import marko
 
+
 class md2www:
     def __init__(self, src_folder, www_folder, project) -> None:
         self.project = project
@@ -17,22 +18,24 @@ class md2www:
         weigth = {}
         counter = 0
         try:
-            with open(self.src+"order.txt") as f:
+            with open(self.src + "order.txt") as f:
                 for line in f.readlines():
                     weigth[line.replace("\n", "")] = counter
-                    counter+=1
+                    counter += 1
 
             return weigth
         except:
             print("Missing order.txt file in the root of the src")
             sys.exit(0)
-    
+
     def order_struct(self):
-        ordered_struct = dict(sorted(self.struct.items(), key=lambda item: item[1]['weigth']))
+        ordered_struct = dict(
+            sorted(self.struct.items(), key=lambda item: item[1]["weigth"])
+        )
 
         for key, value in ordered_struct.items():
-            if 'content' in value:
-                value['content'] = sorted(value['content'], key=lambda x: x['weigth'])
+            if "content" in value:
+                value["content"] = sorted(value["content"], key=lambda x: x["weigth"])
 
         self.struct = ordered_struct
 
@@ -41,34 +44,34 @@ class md2www:
         missing = False
         self.assets = []
         for directory in os.listdir(self.src):
-            if os.path.isdir(self.src+directory) and directory[0] != ".":
+            if (
+                os.path.isdir(self.src + directory)
+                and directory[0] != "."
+                and directory != "www"
+            ):
                 content = []
                 chapter_weigth = 10000000
-                for file in os.listdir(self.src+directory):
-                    if not os.path.isdir(self.src+directory+"/"+file):
+                for file in os.listdir(self.src + directory):
+                    if not os.path.isdir(self.src + directory + "/" + file):
                         try:
                             if weigth[file] < chapter_weigth:
                                 chapter_weigth = weigth[file]
-                            
-                            content.append({
-                            "name": file,
-                            "weigth": weigth[file]
-                            })
+
+                            content.append({"name": file, "weigth": weigth[file]})
                         except:
                             print("Missing file {} in order.txt".format(file))
                             missing = True
                     else:
                         if file == "assets":
-                            for f in os.listdir(self.src+directory+"/assets"):
-                                self.assets.append(self.src + directory +"/assets/"+ f)
-                self.struct[directory] = {
-                    "content": content,
-                    "weigth": chapter_weigth
-                }
-        
+                            for f in os.listdir(self.src + directory + "/assets"):
+                                self.assets.append(
+                                    self.src + directory + "/assets/" + f
+                                )
+                self.struct[directory] = {"content": content, "weigth": chapter_weigth}
+
         if missing:
             sys.exit(0)
-        
+
         self.order_struct()
 
     def file2name(self, file):
@@ -87,8 +90,8 @@ class md2www:
         section += self.file2name(key)
         section += "</h2>"
 
-        for file in value['content']:
-            section+=self.generate_link(file['name'])
+        for file in value["content"]:
+            section += self.generate_link(file["name"])
 
         section += "</section>"
 
@@ -101,14 +104,18 @@ class md2www:
         nav += "</nav>"
 
         return nav
-    
+
     def generate_page(self, template, nav, chapter, content):
         name = self.file2name(content)
 
         with open(self.src + chapter + "/" + content) as f:
             parsed = marko.convert(f.read())
 
-        page = template.replace("<!--title-->", "{} | {}".format(name, self.project)).replace("<!--nav-->", nav).replace("<!--content-->", parsed)
+        page = (
+            template.replace("<!--title-->", "{} | {}".format(name, self.project))
+            .replace("<!--nav-->", nav)
+            .replace("<!--content-->", parsed)
+        )
 
         with open(self.www + self.file2link(content), "w") as f:
             f.write(page)
@@ -119,23 +126,28 @@ class md2www:
     def generate_pages(self):
         nav = self.generate_navigation()
 
-        templatefile="template.html"
-        if os.path.exists(self.src+"template.html"):
-            templatefile = self.src+"template.html"
+        templatefile = "template.html"
+        if os.path.exists(self.src + "template.html"):
+            templatefile = self.src + "template.html"
+        else:
+            print("Missing template.html file in the root of the src, use default")
+            templatefile = (
+                os.path.dirname(os.path.realpath(__file__)) + "/template.html"
+            )
 
         with open(templatefile) as f:
             template = f.read()
 
         for key, value in self.struct.items():
-            for p in value['content']:
-                self.generate_page(template, nav, key, p['name'])
+            for p in value["content"]:
+                self.generate_page(template, nav, key, p["name"])
 
     def move_assets(self):
         for asset in self.assets:
             if os.path.isfile(asset):
-                if not os.path.exists(self.www+"assets"):
-                    os.makedirs(self.www+"assets")
-                shutil.copy(asset, self.www+"assets")
+                if not os.path.exists(self.www + "assets"):
+                    os.makedirs(self.www + "assets")
+                shutil.copy(asset, self.www + "assets")
             else:
                 print(f"File {asset} does not exist.")
         print("Assets moved successfully.")

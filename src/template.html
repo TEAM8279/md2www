@@ -4,11 +4,81 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><!--title--></title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+        }
+        nav {
+            background-color: #f0f0f0;
+            width: 250px;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease-in-out;
+            position: fixed;
+            left: 0;
+            top: 0;
+        }
+        nav.hidden {
+            transform: translateX(-250px);
+        }
+        nav section {
+            padding: 10px;
+        }
+        nav h1, nav h2 {
+            margin-top: 0;
+        }
+	nav .title h1 {
+	    margin-top: 80px;
+	}
+        nav a {
+            display: block;
+            padding: 5px 0;
+            color: #333;
+            text-decoration: none;
+        }
+        nav a:hover {
+            color: #0066cc;
+        }
+        main {
+            flex-grow: 1;
+            padding: 20px;
+            margin-left: 250px;
+            transition: margin-left 0.3s ease-in-out;
+        }
+        main.full-width {
+            margin-left: 0;
+        }
+        #toggleNav {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background-color: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+        }
+    </style>
 </head>
+<button id="toggleNav">Toggle Nav</button>
 <body>
 <!--nav-->
 <main>
 <!--content-->
 </main>
 </body>
+<script>
+    const toggleNav = document.getElementById('toggleNav');
+    const nav = document.querySelector('nav');
+    const main = document.querySelector('main');
+
+    toggleNav.addEventListener('click', () => {
+        nav.classList.toggle('hidden');
+        main.classList.toggle('full-width');
+    });
+</script>
 </html>
