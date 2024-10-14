@@ -26,7 +26,7 @@ class md2www:
             return weigth
         except:
             print("Missing order.txt file in the root of the src")
-            sys.exit(0)
+            sys.exit(500)
 
     def order_struct(self):
         ordered_struct = dict(
