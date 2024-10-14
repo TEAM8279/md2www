@@ -52,7 +52,11 @@ class md2www:
                 content = []
                 chapter_weigth = 10000000
                 for file in os.listdir(self.src + directory):
-                    if not os.path.isdir(self.src + directory + "/" + file):
+                    if (
+                        file[0] == "." or file == "LICENSE" or file == "README.md"
+                    ):  # ignore hidden files
+                        continue
+                    elif not os.path.isdir(self.src + directory + "/" + file):
                         try:
                             if weigth[file] < chapter_weigth:
                                 chapter_weigth = weigth[file]
