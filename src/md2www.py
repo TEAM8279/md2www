@@ -48,6 +48,7 @@ class md2www:
                 os.path.isdir(self.src + directory)
                 and directory[0] != "."
                 and directory != "www"
+                and directory != "md2www"
             ):
                 content = []
                 chapter_weigth = 10000000
